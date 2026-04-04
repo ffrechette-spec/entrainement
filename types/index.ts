@@ -2,6 +2,19 @@ import type { Timestamp } from "firebase/firestore";
 
 export type JourSemaine = "lundi" | "mardi" | "mercredi" | "jeudi" | "vendredi";
 
+export interface Exercice {
+  id: string;
+  nom: string;
+  jour: JourSemaine;
+  seriesCibles: string;
+  repsCibles: string;
+  seriesCount: number;
+  repos: string;
+  technique: string;
+  youtubeUrl: string;
+  groupeMusculaire: string;
+}
+
 export interface Serie {
   numero: number;
   poids: number | null;
