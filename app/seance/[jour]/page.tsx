@@ -14,6 +14,9 @@ import type { DerniersPoids, FeedbackSeance } from "@/lib/firestore";
 import type { JourSemaine } from "@/types";
 import ExerciceCard from "@/components/ExerciceCard";
 import FinSeanceModal from "@/components/FinSeanceModal";
+import PixelIcon from "@/components/PixelIcon";
+import { getCouleurJour } from "@/lib/couleurs";
+import type { PixelIconType } from "@/components/PixelIcon";
 
 const JOURS_VALIDES: JourSemaine[] = ["lundi", "mardi", "mercredi", "jeudi", "vendredi"];
 
@@ -23,6 +26,14 @@ const FOCUS: Record<JourSemaine, string> = {
   mercredi: "Jambes",
   jeudi: "Épaules · Dos · Bras",
   vendredi: "Jambes · Abdominaux · Cardio",
+};
+
+const ICONS: Record<JourSemaine, PixelIconType> = {
+  lundi: "pecs",
+  mardi: "dos",
+  mercredi: "jambes",
+  jeudi: "epaules",
+  vendredi: "cardio",
 };
 
 interface SeancePageProps {
@@ -90,6 +101,8 @@ export default function SeancePage({ params }: SeancePageProps) {
   const dateAujourdhui = formatDate(new Date());
   const exercice = exercices[index] ?? null;
   const estDernierExercice = index === exercices.length - 1;
+  const couleur = getCouleurJour(jourValide);
+  const iconType = ICONS[jourValide];
 
   return (
     <>
@@ -101,7 +114,10 @@ export default function SeancePage({ params }: SeancePageProps) {
         />
       )}
 
-      <div className="px-4 py-6">
+      <div
+        className="px-4 py-6"
+        style={{ background: `linear-gradient(180deg, ${couleur.hex}12 0%, transparent 120px)` }}
+      >
         <header className="mb-5 flex items-start gap-3">
           <Link
             href="/"
@@ -110,11 +126,20 @@ export default function SeancePage({ params }: SeancePageProps) {
           >
             ←
           </Link>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent opacity-70">
-              Semaine {semaine} · {dateAujourdhui}
-            </p>
-            <h1 className="text-xl font-bold text-foreground leading-tight">{label}</h1>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span
+                className="font-retro text-xs font-bold tracking-widest animate-retro-pulse inline-block rounded-full px-2 py-0.5"
+                style={{ color: couleur.hex, backgroundColor: `${couleur.hex}20` }}
+              >
+                S{semaine}
+              </span>
+              <span className="text-xs text-foreground/40">{dateAujourdhui}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <h1 className="font-retro text-xl font-bold text-foreground leading-tight">{label}</h1>
+              <PixelIcon type={iconType} size={20} />
+            </div>
             <p className="text-sm text-foreground/50 mt-0.5">{focus}</p>
           </div>
         </header>
