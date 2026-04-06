@@ -14,6 +14,13 @@
   --color-light: #f0f4f8;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-retro: var(--font-orbitron);
+
+  --color-retro-rose:   #FF6B9D;
+  --color-retro-bleu:   #4ECDC4;
+  --color-retro-violet: #C77DFF;
+  --color-retro-cyan:   #00F5FF;
+  --color-retro-gold:   #FFD93D;
 }
 
 @media (prefers-color-scheme: dark) {
