@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { getSeancesParJour } from "@/lib/firestore";
+import ProgressionChart from "@/components/ProgressionChart";
 import type { JourSemaine } from "@/types";
 
 const JOURS: { slug: JourSemaine; label: string }[] = [
@@ -74,6 +75,12 @@ export default function HistoriquePage() {
         </p>
         <h1 className="text-2xl font-bold text-foreground">Mes séances</h1>
       </header>
+
+      {!loading && user && (
+        <div className="mb-4">
+          <ProgressionChart uid={user.uid} />
+        </div>
+      )}
 
       {loading ? (
         <div className="rounded-2xl bg-white p-6 shadow-sm text-center text-foreground/40">
