@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gym Tracker
 
-## Getting Started
+Application PWA de suivi d'entraînement personnel — programme 8 semaines, 5 jours / semaine.
 
-First, run the development server:
+Style **80s Tracksuit** : couleurs rétro par groupe musculaire, icônes pixel art 16-bit, police Orbitron sur les titres.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Fonctionnalités
+
+- Suivi des séances par jour (lundi → vendredi)
+- Pré-remplissage automatique des poids depuis la dernière séance
+- Indicateur de progression (↑ / ↓ / =) par exercice
+- Sauvegarde automatique en temps réel (Firestore)
+- Historique des séances avec graphique de progression
+- Export JSON structuré pour analyse par Claude
+- PWA installable (offline-first, service worker manuel)
+- Authentification Firebase
+
+## Stack technique
+
+| Couche | Technologie |
+|---|---|
+| Framework | Next.js 16.2 (Turbopack, App Router) |
+| UI | React 19, Tailwind CSS v4 |
+| Base de données | Firebase Firestore |
+| Auth | Firebase Authentication |
+| Graphiques | Recharts |
+| Polices | Geist (corps), Orbitron (titres) |
+| Tests | Jest 29, @testing-library/react |
+| PWA | Service Worker manuel (sans next-pwa) |
+| Déploiement | Vercel / Netlify |
+
+## Installation locale
+
+### Prérequis
+
+- Node.js 20+
+- Un projet Firebase (Firestore + Authentication activés)
+
+### Variables d'environnement
+
+Crée un fichier `.env.local` à la racine :
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Démarrage
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ouvre [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+### Tests
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm test                    # 115 tests
+npm test -- --coverage      # rapport de couverture
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Build production
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+```
 
-## Deploy on Vercel
+## Structure du projet
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/                  # Pages Next.js (App Router)
+  page.tsx            # Accueil — liste des jours
+  seance/[jour]/      # Page de séance
+  historique/         # Historique + graphique
+  export/             # Export JSON
+components/           # Composants React
+  PixelIcon.tsx       # Icônes SVG pixel art 16-bit
+  SerieInput.tsx      # Saisie poids/reps avec animations
+  ExerciceCard.tsx    # Carte exercice avec navigation
+  ProgressionBadge.tsx
+  ProgressionChart.tsx
+hooks/                # Hooks React
+  useSeance.ts        # Gestion séance (CRUD Firestore)
+  useHistorique.ts    # Historique + progression
+lib/                  # Utilitaires
+  firestore.ts        # Fonctions Firestore
+  couleurs.ts         # Système couleurs rétro par groupe musculaire
+  export.ts           # Génération export JSON
+  utils.ts            # Calcul semaine, formatage dates
+public/
+  manifest.json       # PWA manifest
+  sw.js               # Service Worker (cache-first)
+  icons/              # Icônes PWA (192, 512, apple-touch)
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Lien production
+
+[project-r25x0.vercel.app](https://project-r25x0.vercel.app)
