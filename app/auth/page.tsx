@@ -27,8 +27,8 @@ export default function ConnexionPage() {
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-6 text-center">
           <p className="text-4xl mb-3">🏋️</p>
-          <h1 className="text-2xl font-bold text-foreground">Gym Tracker</h1>
-          <p className="mt-1 text-sm text-foreground/60">
+          <h1 className="font-retro text-2xl font-bold text-[#1a1a2e]">Gym Tracker</h1>
+          <p className="mt-1 text-sm text-gray-600">
             Connecte-toi pour accéder à ton suivi d&apos;entraînement.
           </p>
         </div>
