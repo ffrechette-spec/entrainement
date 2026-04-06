@@ -5,9 +5,6 @@ const config = {
     "^@/(.*)$": "<rootDir>/$1",
   },
   testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"],
-  transform: {
-    "^.+\\.tsx?$": ["ts-jest", { tsconfig: { module: "commonjs", moduleResolution: "node" } }],
-  },
 };
 
 export default config;

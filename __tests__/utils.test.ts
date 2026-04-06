@@ -60,12 +60,12 @@ describe("getExercicesParJour", () => {
     expect(getExercicesParJour("mercredi").length).toBe(5);
   });
 
-  it("retourne 5 exercices le jeudi", () => {
-    expect(getExercicesParJour("jeudi").length).toBe(5);
+  it("retourne 6 exercices le jeudi", () => {
+    expect(getExercicesParJour("jeudi").length).toBe(6);
   });
 
-  it("retourne 4 exercices le vendredi", () => {
-    expect(getExercicesParJour("vendredi").length).toBe(4);
+  it("retourne 5 exercices le vendredi", () => {
+    expect(getExercicesParJour("vendredi").length).toBe(5);
   });
 
   it("chaque exercice a un id en kebab-case", () => {
