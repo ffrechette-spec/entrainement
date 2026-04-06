@@ -10,44 +10,48 @@ export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 interface UseSeanceReturn {
   seanceId: string | null;
+  seanceCompletee: boolean;
   loading: boolean;
   saveStatus: SaveStatus;
   saveSerie: (exerciceId: string, nomExercice: string, series: Serie[]) => void;
   saveNotes: (exerciceId: string, notes: string) => void;
+  nouvelleSeance: () => Promise<void>;
 }
 
 export function useSeance(uid: string, jour: JourSemaine): UseSeanceReturn {
   const [seanceId, setSeanceId] = useState<string | null>(null);
+  const [seanceCompletee, setSeanceCompletee] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const initSeance = useCallback(async (forceNew = false) => {
+    if (!uid) return;
+    setLoading(true);
+    try {
+      const existing = !forceNew ? await getSeanceDuJour(uid, jour) : null;
+      if (existing) {
+        setSeanceId(existing.id);
+        setSeanceCompletee(!!(existing.data as { completee?: boolean }).completee);
+      } else {
+        const dateDebut = await getDateDebut(uid);
+        const semaine = dateDebut ? getSemaineActuelle(new Date(dateDebut)) : 1;
+        const id = await creerSeance(uid, jour, semaine);
+        setSeanceId(id);
+        setSeanceCompletee(false);
+      }
+    } catch {
+      // réseau indisponible
+    } finally {
+      setLoading(false);
+    }
+  }, [uid, jour]);
+
   useEffect(() => {
     let cancelled = false;
-
-    async function init() {
-      setLoading(true);
-      try {
-        const existing = await getSeanceDuJour(uid, jour);
-        if (cancelled) return;
-        if (existing) {
-          setSeanceId(existing.id);
-        } else {
-          const dateDebut = await getDateDebut(uid);
-          const semaine = dateDebut ? getSemaineActuelle(new Date(dateDebut)) : 1;
-          const id = await creerSeance(uid, jour, semaine);
-          if (!cancelled) setSeanceId(id);
-        }
-      } catch {
-        // réseau indisponible — on continuera hors-ligne
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    init();
+    initSeance().then(() => { if (cancelled) { /* noop */ } });
     return () => { cancelled = true; };
-  }, [uid, jour]);
+  }, [initSeance]);
 
   const saveSerie = useCallback(
     (exerciceId: string, nomExercice: string, series: Serie[]) => {
@@ -85,5 +89,9 @@ export function useSeance(uid: string, jour: JourSemaine): UseSeanceReturn {
     [uid, seanceId]
   );
 
-  return { seanceId, loading, saveStatus, saveSerie, saveNotes };
+  const nouvelleSeance = useCallback(async () => {
+    await initSeance(true);
+  }, [initSeance]);
+
+  return { seanceId, seanceCompletee, loading, saveStatus, saveSerie, saveNotes, nouvelleSeance };
 }

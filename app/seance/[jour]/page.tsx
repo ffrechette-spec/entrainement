@@ -9,9 +9,11 @@ import { getExercicesParJour } from "@/lib/programme";
 import { getSemaineActuelle, formatDate } from "@/lib/utils";
 import { useSeance } from "@/hooks/useSeance";
 import { useHistorique } from "@/hooks/useHistorique";
-import type { DerniersPoids } from "@/lib/firestore";
+import { completerSeance } from "@/lib/firestore";
+import type { DerniersPoids, FeedbackSeance } from "@/lib/firestore";
 import type { JourSemaine } from "@/types";
 import ExerciceCard from "@/components/ExerciceCard";
+import FinSeanceModal from "@/components/FinSeanceModal";
 
 const JOURS_VALIDES: JourSemaine[] = ["lundi", "mardi", "mercredi", "jeudi", "vendredi"];
 
@@ -44,13 +46,15 @@ export default function SeancePage({ params }: SeancePageProps) {
     [jourValide]
   );
 
-  const { saveStatus, saveSerie, saveNotes } = useSeance(
+  const { seanceId, seanceCompletee, saveStatus, saveSerie, saveNotes, nouvelleSeance } = useSeance(
     user?.uid ?? "",
     jourValide ?? "lundi"
   );
 
   const { getPoidsPrecedents } = useHistorique(user?.uid ?? "");
   const [derniersPoids, setDerniersPoids] = useState<DerniersPoids | null>(null);
+  const [showFinSeance, setShowFinSeance] = useState(false);
+  const [finSaving, setFinSaving] = useState(false);
 
   useEffect(() => {
     if (!user || !jourValide || !exercices[index]) return;
@@ -68,50 +72,97 @@ export default function SeancePage({ params }: SeancePageProps) {
     });
   }, [user]);
 
+  async function handleTerminer(feedback: FeedbackSeance) {
+    if (!user || !seanceId) return;
+    setFinSaving(true);
+    try {
+      await completerSeance(user.uid, seanceId, feedback);
+      router.push("/");
+    } catch {
+      setFinSaving(false);
+    }
+  }
+
   if (!jourValide) return null;
 
   const label = jourValide.charAt(0).toUpperCase() + jourValide.slice(1);
   const focus = FOCUS[jourValide];
   const dateAujourdhui = formatDate(new Date());
   const exercice = exercices[index] ?? null;
+  const estDernierExercice = index === exercices.length - 1;
 
   return (
-    <div className="px-4 py-6">
-      <header className="mb-5 flex items-start gap-3">
-        <Link
-          href="/"
-          className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm text-foreground/60 active:opacity-70"
-          aria-label="Retour"
-        >
-          ←
-        </Link>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-widest text-accent opacity-70">
-            Semaine {semaine} · {dateAujourdhui}
-          </p>
-          <h1 className="text-xl font-bold text-foreground leading-tight">{label}</h1>
-          <p className="text-sm text-foreground/50 mt-0.5">{focus}</p>
-        </div>
-      </header>
-
-      {exercice ? (
-        <ExerciceCard
-          key={exercice.id}
-          exercice={exercice}
-          index={index}
-          total={exercices.length}
-          saveStatus={saveStatus}
-          derniersPoids={derniersPoids}
-          onPrev={() => setIndex((i) => Math.max(0, i - 1))}
-          onNext={() => setIndex((i) => Math.min(exercices.length - 1, i + 1))}
-          onSeriesChange={saveSerie}
-          onNotesChange={saveNotes}
+    <>
+      {showFinSeance && (
+        <FinSeanceModal
+          onConfirm={handleTerminer}
+          onAnnuler={() => setShowFinSeance(false)}
+          saving={finSaving}
         />
-      ) : (
-        <div className="rounded-2xl bg-white p-4 shadow-sm text-center text-foreground/50">
-          <p className="text-sm">Chargement des exercices…</p>
-        </div>
       )}
-    </div>
+
+      <div className="px-4 py-6">
+        <header className="mb-5 flex items-start gap-3">
+          <Link
+            href="/"
+            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm text-foreground/60 active:opacity-70"
+            aria-label="Retour"
+          >
+            ←
+          </Link>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-accent opacity-70">
+              Semaine {semaine} · {dateAujourdhui}
+            </p>
+            <h1 className="text-xl font-bold text-foreground leading-tight">{label}</h1>
+            <p className="text-sm text-foreground/50 mt-0.5">{focus}</p>
+          </div>
+        </header>
+
+        {exercice ? (
+          <ExerciceCard
+            key={exercice.id}
+            exercice={exercice}
+            index={index}
+            total={exercices.length}
+            saveStatus={saveStatus}
+            derniersPoids={derniersPoids}
+            onPrev={() => setIndex((i) => Math.max(0, i - 1))}
+            onNext={() => setIndex((i) => Math.min(exercices.length - 1, i + 1))}
+            onSeriesChange={saveSerie}
+            onNotesChange={saveNotes}
+          />
+        ) : (
+          <div className="rounded-2xl bg-white p-4 shadow-sm text-center text-foreground/50">
+            <p className="text-sm">Chargement des exercices…</p>
+          </div>
+        )}
+
+        {seanceCompletee && (
+          <div className="mt-4 rounded-2xl bg-green-50 border border-green-200 p-4">
+            <p className="text-sm font-semibold text-green-800 mb-3">
+              ✓ Séance déjà complétée aujourd&apos;hui
+            </p>
+            <button
+              type="button"
+              onClick={nouvelleSeance}
+              className="w-full min-h-[44px] rounded-xl border border-green-300 text-sm font-medium text-green-700 active:opacity-70"
+            >
+              Recommencer une nouvelle séance
+            </button>
+          </div>
+        )}
+
+        {!seanceCompletee && estDernierExercice && exercice && (
+          <button
+            type="button"
+            onClick={() => setShowFinSeance(true)}
+            className="mt-4 w-full min-h-[52px] rounded-2xl bg-green-500 font-semibold text-white text-base active:opacity-80"
+          >
+            Terminer la séance ✓
+          </button>
+        )}
+      </div>
+    </>
   );
 }
