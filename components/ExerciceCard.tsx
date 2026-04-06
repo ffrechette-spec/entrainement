@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import type { Exercice, Serie } from "@/types";
+import type { DerniersPoids } from "@/lib/firestore";
 import SerieInput from "@/components/SerieInput";
+import ProgressionBadge from "@/components/ProgressionBadge";
 import type { SaveStatus } from "@/hooks/useSeance";
 
 interface ExerciceCardProps {
@@ -10,6 +12,7 @@ interface ExerciceCardProps {
   index: number;
   total: number;
   saveStatus: SaveStatus;
+  derniersPoids?: DerniersPoids | null;
   onPrev: () => void;
   onNext: () => void;
   onSeriesChange: (exerciceId: string, nom: string, series: Serie[]) => void;
@@ -29,11 +32,30 @@ export default function ExerciceCard({
   index,
   total,
   saveStatus,
+  derniersPoids,
   onPrev,
   onNext,
   onSeriesChange,
 }: ExerciceCardProps) {
   const [series, setSeries] = useState<Serie[]>(() => buildSeries(exercice.seriesCount));
+
+  const poidsParSerie: (number | null)[] = [
+    derniersPoids?.serie1 ?? null,
+    derniersPoids?.serie2 ?? null,
+    derniersPoids?.serie3 ?? null,
+    derniersPoids?.serie4 ?? null,
+  ];
+
+  const poidsMaxActuel = series.reduce<number | null>((max, s) => {
+    if (s.poids === null) return max;
+    return max === null ? s.poids : Math.max(max, s.poids);
+  }, null);
+
+  const poidsPrecedentMax = derniersPoids
+    ? ([derniersPoids.serie1, derniersPoids.serie2, derniersPoids.serie3, derniersPoids.serie4]
+        .filter((p): p is number => p !== null)
+        .reduce<number | null>((m, p) => (m === null ? p : Math.max(m, p)), null))
+    : null;
 
   function handleSerieChange(updated: Serie) {
     const next = series.map((s) => (s.numero === updated.numero ? updated : s));
@@ -71,7 +93,10 @@ export default function ExerciceCard({
         <p className="text-xs font-semibold uppercase tracking-widest text-accent/70 mb-1">
           {exercice.groupeMusculaire}
         </p>
-        <h2 className="text-xl font-bold text-foreground mb-4">{exercice.nom}</h2>
+        <h2 className="text-xl font-bold text-foreground mb-1">{exercice.nom}</h2>
+        <div className="mb-4">
+          <ProgressionBadge poidsActuel={poidsMaxActuel} poidsPrecedent={poidsPrecedentMax} />
+        </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="rounded-xl bg-background p-3">
@@ -114,8 +139,13 @@ export default function ExerciceCard({
           ) : null}
         </div>
         <div className="flex flex-col gap-1 px-3 pb-4">
-          {series.map((serie) => (
-            <SerieInput key={serie.numero} serie={serie} onChange={handleSerieChange} />
+          {series.map((serie, i) => (
+            <SerieInput
+              key={serie.numero}
+              serie={serie}
+              poidsDefaut={poidsParSerie[i] ?? null}
+              onChange={handleSerieChange}
+            />
           ))}
         </div>
       </div>

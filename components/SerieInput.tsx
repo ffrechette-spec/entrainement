@@ -4,10 +4,11 @@ import type { Serie } from "@/types";
 
 interface SerieInputProps {
   serie: Serie;
+  poidsDefaut?: number | null;
   onChange: (updated: Serie) => void;
 }
 
-export default function SerieInput({ serie, onChange }: SerieInputProps) {
+export default function SerieInput({ serie, poidsDefaut, onChange }: SerieInputProps) {
   function handlePoids(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
     onChange({ ...serie, poids: val === "" ? null : parseFloat(val) });
@@ -44,9 +45,14 @@ export default function SerieInput({ serie, onChange }: SerieInputProps) {
             step={0.5}
             value={serie.poids ?? ""}
             onChange={handlePoids}
-            placeholder="—"
+            placeholder={poidsDefaut != null ? String(poidsDefaut) : "—"}
             className="min-h-[44px] w-full rounded-lg border border-accent/20 bg-white px-3 py-2 text-center text-base font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
           />
+          {poidsDefaut != null && serie.poids === null && (
+            <span className="mt-0.5 text-center text-[10px] text-foreground/40">
+              Dernier : {poidsDefaut} kg
+            </span>
+          )}
         </div>
         <div className="flex flex-1 flex-col">
           <label className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-foreground/40">

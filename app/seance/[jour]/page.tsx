@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,8 @@ import { getDateDebut } from "@/components/SetupModal";
 import { getExercicesParJour } from "@/lib/programme";
 import { getSemaineActuelle, formatDate } from "@/lib/utils";
 import { useSeance } from "@/hooks/useSeance";
+import { useHistorique } from "@/hooks/useHistorique";
+import type { DerniersPoids } from "@/lib/firestore";
 import type { JourSemaine } from "@/types";
 import ExerciceCard from "@/components/ExerciceCard";
 
@@ -37,12 +39,23 @@ export default function SeancePage({ params }: SeancePageProps) {
     ? (jour as JourSemaine)
     : null;
 
-  const exercices = jourValide ? getExercicesParJour(jourValide) : [];
+  const exercices = useMemo(
+    () => (jourValide ? getExercicesParJour(jourValide) : []),
+    [jourValide]
+  );
 
   const { saveStatus, saveSerie } = useSeance(
     user?.uid ?? "",
     jourValide ?? "lundi"
   );
+
+  const { getPoidsPrecedents } = useHistorique(user?.uid ?? "");
+  const [derniersPoids, setDerniersPoids] = useState<DerniersPoids | null>(null);
+
+  useEffect(() => {
+    if (!user || !jourValide || !exercices[index]) return;
+    getPoidsPrecedents(jourValide, exercices[index].id).then(setDerniersPoids).catch(() => {});
+  }, [user, jourValide, index, exercices, getPoidsPrecedents]);
 
   useEffect(() => {
     if (!jourValide) router.replace("/");
@@ -88,6 +101,7 @@ export default function SeancePage({ params }: SeancePageProps) {
           index={index}
           total={exercices.length}
           saveStatus={saveStatus}
+          derniersPoids={derniersPoids}
           onPrev={() => setIndex((i) => Math.max(0, i - 1))}
           onNext={() => setIndex((i) => Math.min(exercices.length - 1, i + 1))}
           onSeriesChange={saveSerie}
