@@ -1,22 +1,52 @@
 "use client";
 
-import type { Exercice } from "@/types";
+import { useState } from "react";
+import type { Exercice, Serie } from "@/types";
+import SerieInput from "@/components/SerieInput";
+import type { SaveStatus } from "@/hooks/useSeance";
 
 interface ExerciceCardProps {
   exercice: Exercice;
   index: number;
   total: number;
+  saveStatus: SaveStatus;
   onPrev: () => void;
   onNext: () => void;
+  onSeriesChange: (exerciceId: string, nom: string, series: Serie[]) => void;
+}
+
+function buildSeries(count: number): Serie[] {
+  return Array.from({ length: count }, (_, i) => ({
+    numero: i + 1,
+    poids: null,
+    reps: null,
+    completee: false,
+  }));
 }
 
 export default function ExerciceCard({
   exercice,
   index,
   total,
+  saveStatus,
   onPrev,
   onNext,
+  onSeriesChange,
 }: ExerciceCardProps) {
+  const [series, setSeries] = useState<Serie[]>(() => buildSeries(exercice.seriesCount));
+
+  function handleSerieChange(updated: Serie) {
+    const next = series.map((s) => (s.numero === updated.numero ? updated : s));
+    setSeries(next);
+    onSeriesChange(exercice.id, exercice.nom, next);
+  }
+
+  const saveLabel =
+    saveStatus === "saving" ? "Sauvegarde…"
+    : saveStatus === "saved" ? "Sauvegardé ✓"
+    : saveStatus === "error" ? "Erreur ✗"
+    : null;
+
   return (
     <div className="flex flex-col gap-4">
       {/* Indicateur de progression */}
@@ -41,9 +71,7 @@ export default function ExerciceCard({
         <p className="text-xs font-semibold uppercase tracking-widest text-accent/70 mb-1">
           {exercice.groupeMusculaire}
         </p>
-        <h2 className="text-xl font-bold text-foreground mb-4">
-          {exercice.nom}
-        </h2>
+        <h2 className="text-xl font-bold text-foreground mb-4">{exercice.nom}</h2>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="rounded-xl bg-background p-3">
@@ -56,9 +84,7 @@ export default function ExerciceCard({
           </div>
         </div>
 
-        <p className="text-sm text-foreground/60 mb-4 leading-relaxed">
-          {exercice.technique}
-        </p>
+        <p className="text-sm text-foreground/60 mb-4 leading-relaxed">{exercice.technique}</p>
 
         <a
           href={exercice.youtubeUrl}
@@ -73,9 +99,25 @@ export default function ExerciceCard({
         </a>
       </div>
 
-      {/* Zone saisie (Phase 5) */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm min-h-[80px] flex items-center justify-center">
-        <p className="text-sm text-foreground/30">Saisie des séries — Phase 5</p>
+      {/* Saisie des séries */}
+      <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <p className="text-sm font-semibold text-foreground">Séries</p>
+          {saveLabel ? (
+            <span className={`text-xs font-medium ${
+              saveStatus === "saved" ? "text-green-600"
+              : saveStatus === "error" ? "text-red-500"
+              : "text-foreground/40"
+            }`}>
+              {saveLabel}
+            </span>
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-1 px-3 pb-4">
+          {series.map((serie) => (
+            <SerieInput key={serie.numero} serie={serie} onChange={handleSerieChange} />
+          ))}
+        </div>
       </div>
 
       {/* Navigation */}

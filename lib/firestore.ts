@@ -1,27 +1,35 @@
-import { Timestamp } from "firebase/firestore";
-
+import {
+  collection,
+  doc,
+  addDoc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import type { ExerciceSeance, JourSemaine, Seance, Serie } from "@/types";
 
-export interface CreerSeanceInput {
-  jour: JourSemaine;
-  date?: Date;
-  semaine?: number;
+function dateToStr(date: Date): string {
+  return date.toISOString().split("T")[0];
 }
 
-export interface SauvegarderSerieInput {
-  seanceId: string;
-  exerciceId: string;
-  serie: Serie;
-}
-
-export async function creerSeance({ jour, date = new Date(), semaine = 1 }: CreerSeanceInput): Promise<Seance> {
-  const timestamp = Timestamp.fromDate(date);
-
-  return {
-    id: "",
+export async function creerSeance(
+  uid: string,
+  jour: JourSemaine,
+  semaine: number,
+  date: Date = new Date()
+): Promise<string> {
+  const now = Timestamp.now();
+  const seancesRef = collection(db, "users", uid, "seances");
+  const docRef = await addDoc(seancesRef, {
     jour,
-    date: timestamp,
+    date: dateToStr(date),
     semaine,
+    exercices: [],
+    completee: false,
     qualite: null,
     energieAvant: null,
     energieApres: null,
@@ -30,28 +38,65 @@ export async function creerSeance({ jour, date = new Date(), semaine = 1 }: Cree
     cardioFait: false,
     cardioDuree: null,
     notes: "",
-    exercices: [],
-    completee: false,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  };
+    createdAt: now,
+    updatedAt: now,
+  });
+  return docRef.id;
 }
 
-export async function sauvegarderSerie({ seanceId, exerciceId, serie }: SauvegarderSerieInput): Promise<{ seanceId: string; exerciceId: string; serie: Serie }> {
-  return { seanceId, exerciceId, serie };
+export async function getSeanceDuJour(
+  uid: string,
+  jour: JourSemaine,
+  date: Date = new Date()
+): Promise<{ id: string; data: Seance } | null> {
+  const seancesRef = collection(db, "users", uid, "seances");
+  const q = query(
+    seancesRef,
+    where("jour", "==", jour),
+    where("date", "==", dateToStr(date))
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const first = snap.docs[0];
+  return { id: first.id, data: { id: first.id, ...first.data() } as Seance };
 }
 
-export async function getSeanceDuJour(jour: JourSemaine, date: Date): Promise<Seance | null> {
-  void jour;
-  void date;
-  return null;
+export async function sauvegarderSerie(
+  uid: string,
+  seanceId: string,
+  exerciceId: string,
+  nomExercice: string,
+  series: Serie[]
+): Promise<void> {
+  const seanceRef = doc(db, "users", uid, "seances", seanceId);
+  const snap = await getDoc(seanceRef);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const exercices: ExerciceSeance[] = Array.isArray(data.exercices)
+    ? (data.exercices as ExerciceSeance[])
+    : [];
+
+  const idx = exercices.findIndex((e) => e.exerciceId === exerciceId);
+  if (idx >= 0) {
+    exercices[idx] = { ...exercices[idx], series };
+  } else {
+    exercices.push({ exerciceId, nom: nomExercice, series, notes: "" });
+  }
+
+  await setDoc(
+    seanceRef,
+    { exercices, updatedAt: Timestamp.now() },
+    { merge: true }
+  );
 }
 
-export async function getSeancesParJour(jour: JourSemaine): Promise<Seance[]> {
-  void jour;
-  return [];
-}
-
-export async function sauvegarderExercices(_seanceId: string, exercices: ExerciceSeance[]): Promise<ExerciceSeance[]> {
-  return exercices;
+export async function getSeancesParJour(
+  uid: string,
+  jour: JourSemaine
+): Promise<Array<{ id: string; data: Seance }>> {
+  const seancesRef = collection(db, "users", uid, "seances");
+  const q = query(seancesRef, where("jour", "==", jour));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, data: { id: d.id, ...d.data() } as Seance }));
 }

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getDateDebut } from "@/components/SetupModal";
 import { getExercicesParJour } from "@/lib/programme";
 import { getSemaineActuelle, formatDate } from "@/lib/utils";
+import { useSeance } from "@/hooks/useSeance";
 import type { JourSemaine } from "@/types";
 import ExerciceCard from "@/components/ExerciceCard";
 
@@ -37,6 +38,11 @@ export default function SeancePage({ params }: SeancePageProps) {
     : null;
 
   const exercices = jourValide ? getExercicesParJour(jourValide) : [];
+
+  const { saveStatus, saveSerie } = useSeance(
+    user?.uid ?? "",
+    jourValide ?? "lundi"
+  );
 
   useEffect(() => {
     if (!jourValide) router.replace("/");
@@ -77,11 +83,14 @@ export default function SeancePage({ params }: SeancePageProps) {
 
       {exercice ? (
         <ExerciceCard
+          key={exercice.id}
           exercice={exercice}
           index={index}
           total={exercices.length}
+          saveStatus={saveStatus}
           onPrev={() => setIndex((i) => Math.max(0, i - 1))}
           onNext={() => setIndex((i) => Math.min(exercices.length - 1, i + 1))}
+          onSeriesChange={saveSerie}
         />
       ) : (
         <div className="rounded-2xl bg-white p-4 shadow-sm text-center text-foreground/50">
