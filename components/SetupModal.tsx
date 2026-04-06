@@ -25,13 +25,16 @@ export default function SetupModal({ user, onComplete }: SetupModalProps) {
     setError(null);
     try {
       const configRef = doc(db, "users", user.uid, "meta", "config");
+      console.log("[SetupModal] writing to", configRef.path, "date:", date);
       await setDoc(
         configRef,
         { dateDebut: date, programmeActif: "8-semaines" },
         { merge: true }
       );
+      console.log("[SetupModal] write success");
       onComplete();
-    } catch {
+    } catch (err) {
+      console.error("[SetupModal] write error", err);
       setError("Erreur lors de la sauvegarde. Réessaie.");
     } finally {
       setSaving(false);
