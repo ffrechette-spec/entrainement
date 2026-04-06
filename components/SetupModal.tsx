@@ -24,7 +24,7 @@ export default function SetupModal({ user, onComplete }: SetupModalProps) {
     setSaving(true);
     setError(null);
     try {
-      const configRef = doc(db, "users", user.uid, "meta", "config");
+      const configRef = doc(db, "users", user.uid);
       console.log("[SetupModal] writing to", configRef.path, "date:", date);
       await setDoc(
         configRef,
@@ -85,7 +85,7 @@ export default function SetupModal({ user, onComplete }: SetupModalProps) {
 }
 
 export async function getDateDebut(uid: string): Promise<string | null> {
-  const configRef = doc(db, "users", uid, "meta", "config");
+  const configRef = doc(db, "users", uid);
   const snap = await getDoc(configRef);
   if (!snap.exists()) return null;
   return (snap.data().dateDebut as string) ?? null;
