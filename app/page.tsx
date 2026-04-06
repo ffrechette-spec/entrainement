@@ -4,17 +4,20 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import SetupModal, { getDateDebut } from "@/components/SetupModal";
 import { getSemaineActuelle, getJourActuel } from "@/lib/utils";
+import { getCouleurJour } from "@/lib/couleurs";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
+import PixelIcon from "@/components/PixelIcon";
 import type { JourSemaine } from "@/types";
+import type { PixelIconType } from "@/components/PixelIcon";
 
-const JOURS: { slug: JourSemaine; label: string; focus: string }[] = [
-  { slug: "lundi",    label: "Lundi",    focus: "Pectoraux · Épaules · Triceps" },
-  { slug: "mardi",    label: "Mardi",    focus: "Dos · Biceps" },
-  { slug: "mercredi", label: "Mercredi", focus: "Jambes" },
-  { slug: "jeudi",    label: "Jeudi",    focus: "Épaules · Dos · Bras" },
-  { slug: "vendredi", label: "Vendredi", focus: "Jambes · Abdominaux · Cardio" },
+const JOURS: { slug: JourSemaine; label: string; icon: PixelIconType }[] = [
+  { slug: "lundi",    label: "Lundi",    icon: "pecs" },
+  { slug: "mardi",    label: "Mardi",    icon: "dos" },
+  { slug: "mercredi", label: "Mercredi", icon: "jambes" },
+  { slug: "jeudi",    label: "Jeudi",    icon: "epaules" },
+  { slug: "vendredi", label: "Vendredi", icon: "cardio" },
 ];
 
 function todayDateStr(): string {
@@ -73,46 +76,69 @@ export default function Accueil() {
 
       <div className="px-4 py-6">
         <header className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-accent opacity-70">
-            {semaine !== null ? `Semaine ${semaine} / 8` : "Gym Tracker"}
-          </p>
-          <h1 className="text-2xl font-bold text-foreground">
+          {semaine !== null ? (
+            <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-retro-bleu/20 to-retro-violet/20 px-3 py-1">
+              <span className="font-retro text-xs font-bold tracking-widest text-retro-bleu">
+                SEMAINE {semaine}
+              </span>
+              <span className="font-retro text-xs text-retro-violet opacity-70">/ 8</span>
+            </div>
+          ) : (
+            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-accent opacity-70">
+              Gym Tracker
+            </p>
+          )}
+          <h1 className="font-retro text-2xl font-bold text-foreground">
             {user?.displayName?.split(" ")[0] ?? "Entraînement"}
           </h1>
         </header>
 
         <ul className="flex flex-col gap-3">
-          {JOURS.map(({ slug, label, focus }) => {
+          {JOURS.map(({ slug, label, icon }) => {
+            const couleur = getCouleurJour(slug);
             const estAujourdhui = slug === jourActuel;
             const estCompletee = seancesCompletes.has(slug);
             return (
               <li key={slug}>
                 <Link
                   href={`/seance/${slug}`}
-                  className={`flex min-h-[64px] items-center justify-between rounded-2xl px-4 py-3 shadow-sm active:opacity-70 ${
-                    estAujourdhui
-                      ? "bg-accent text-white"
-                      : "bg-white text-foreground"
-                  }`}
+                  className="flex min-h-[64px] items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm active:opacity-70 overflow-hidden relative"
+                  style={{
+                    borderLeft: `4px solid ${couleur.hex}`,
+                    backgroundColor: estAujourdhui
+                      ? `${couleur.hex}18`
+                      : undefined,
+                  }}
                 >
                   <div className="min-w-0">
-                    <p className={`font-semibold leading-tight ${estAujourdhui ? "text-white" : "text-foreground"}`}>
+                    <p className="font-semibold leading-tight text-foreground">
                       {label}
                       {estAujourdhui && (
-                        <span className="ml-2 text-xs font-normal opacity-80">Aujourd&apos;hui</span>
+                        <span
+                          className="ml-2 text-xs font-normal"
+                          style={{ color: couleur.hex }}
+                        >
+                          Aujourd&apos;hui
+                        </span>
                       )}
                     </p>
-                    <p className={`text-xs mt-0.5 truncate ${estAujourdhui ? "text-white/70" : "text-foreground/50"}`}>
-                      {focus}
+                    <p className="text-xs mt-0.5 truncate text-foreground/50">
+                      {couleur.label}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
                     {estCompletee && (
-                      <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-semibold text-green-700">
-                        ✓
+                      <span
+                        className="rounded-full px-2 py-0.5 text-xs font-semibold"
+                        style={{
+                          backgroundColor: `${couleur.hex}25`,
+                          color: couleur.hex,
+                        }}
+                      >
+                        ✓ Complétée
                       </span>
                     )}
-                    <span className={estAujourdhui ? "text-white/60" : "text-foreground/30"}>→</span>
+                    <PixelIcon type={icon} size={20} />
                   </div>
                 </Link>
               </li>

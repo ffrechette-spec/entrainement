@@ -1,5 +1,7 @@
+export type PixelIconType = "pecs" | "dos" | "jambes" | "epaules" | "cardio" | "bras";
+
 interface PixelIconProps {
-  type: "pecs" | "dos" | "jambes" | "epaules" | "cardio" | "bras";
+  type: PixelIconType;
   size?: number;
   className?: string;
 }
