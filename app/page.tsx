@@ -21,17 +21,15 @@ export default function Accueil() {
 
   useEffect(() => {
     if (!user) return;
-    console.log("[Accueil] user.uid:", user.uid);
     getDateDebut(user.uid).then((dateDebut) => {
-      console.log("[Accueil] dateDebut from Firestore:", dateDebut);
       if (!dateDebut) {
         setShowSetup(true);
       } else {
         const s = getSemaineActuelle(new Date(dateDebut));
         setSemaine(s);
       }
-    }).catch((err) => {
-      console.error("[Accueil] getDateDebut error:", err);
+    }).catch(() => {
+      setShowSetup(true);
     });
   }, [user]);
 
