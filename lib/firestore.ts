@@ -103,6 +103,32 @@ export async function getSeancesParJour(
   return snap.docs.map((d) => ({ id: d.id, data: { id: d.id, ...d.data() } as Seance }));
 }
 
+export async function sauvegarderNotesExercice(
+  uid: string,
+  seanceId: string,
+  exerciceId: string,
+  notes: string
+): Promise<void> {
+  const seanceRef = doc(db, "users", uid, "seances", seanceId);
+  const snap = await getDoc(seanceRef);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const exercices: ExerciceSeance[] = Array.isArray(data.exercices)
+    ? (data.exercices as ExerciceSeance[])
+    : [];
+
+  const idx = exercices.findIndex((e) => e.exerciceId === exerciceId);
+  if (idx >= 0) {
+    exercices[idx] = { ...exercices[idx], notes };
+    await setDoc(
+      seanceRef,
+      { exercices, updatedAt: Timestamp.now() },
+      { merge: true }
+    );
+  }
+}
+
 export interface DerniersPoids {
   serie1: number | null;
   serie2: number | null;

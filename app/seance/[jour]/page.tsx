@@ -44,7 +44,7 @@ export default function SeancePage({ params }: SeancePageProps) {
     [jourValide]
   );
 
-  const { saveStatus, saveSerie } = useSeance(
+  const { saveStatus, saveSerie, saveNotes } = useSeance(
     user?.uid ?? "",
     jourValide ?? "lundi"
   );
@@ -105,6 +105,7 @@ export default function SeancePage({ params }: SeancePageProps) {
           onPrev={() => setIndex((i) => Math.max(0, i - 1))}
           onNext={() => setIndex((i) => Math.min(exercices.length - 1, i + 1))}
           onSeriesChange={saveSerie}
+          onNotesChange={saveNotes}
         />
       ) : (
         <div className="rounded-2xl bg-white p-4 shadow-sm text-center text-foreground/50">

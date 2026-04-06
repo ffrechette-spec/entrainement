@@ -16,6 +16,7 @@ interface ExerciceCardProps {
   onPrev: () => void;
   onNext: () => void;
   onSeriesChange: (exerciceId: string, nom: string, series: Serie[]) => void;
+  onNotesChange?: (exerciceId: string, notes: string) => void;
 }
 
 function buildSeries(count: number): Serie[] {
@@ -36,8 +37,11 @@ export default function ExerciceCard({
   onPrev,
   onNext,
   onSeriesChange,
+  onNotesChange,
 }: ExerciceCardProps) {
   const [series, setSeries] = useState<Serie[]>(() => buildSeries(exercice.seriesCount));
+  const [notes, setNotes] = useState("");
+  const [notesVisible, setNotesVisible] = useState(false);
 
   const poidsParSerie: (number | null)[] = [
     derniersPoids?.serie1 ?? null,
@@ -122,6 +126,37 @@ export default function ExerciceCard({
           </svg>
           Voir sur YouTube
         </a>
+      </div>
+
+      {/* Notes collapsible */}
+      <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setNotesVisible((v) => !v)}
+          className="flex min-h-[44px] w-full items-center justify-between px-5 py-3 text-sm font-medium text-foreground active:opacity-70"
+        >
+          <span className="flex items-center gap-2">
+            Notes
+            {notes.trim() && (
+              <span className="h-2 w-2 rounded-full bg-accent" />
+            )}
+          </span>
+          <span className="text-foreground/40">{notesVisible ? "▲" : "▼"}</span>
+        </button>
+        {notesVisible && (
+          <div className="px-5 pb-4">
+            <textarea
+              value={notes}
+              onChange={(e) => {
+                setNotes(e.target.value);
+                onNotesChange?.(exercice.id, e.target.value);
+              }}
+              placeholder="Ajoute une note pour cet exercice…"
+              rows={3}
+              className="w-full rounded-xl border border-accent/20 bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+            />
+          </div>
+        )}
       </div>
 
       {/* Saisie des séries */}

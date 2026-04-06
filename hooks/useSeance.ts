@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { creerSeance, getSeanceDuJour, sauvegarderSerie } from "@/lib/firestore";
+import { creerSeance, getSeanceDuJour, sauvegarderSerie, sauvegarderNotesExercice } from "@/lib/firestore";
 import { getSemaineActuelle } from "@/lib/utils";
 import { getDateDebut } from "@/components/SetupModal";
 import type { JourSemaine, Serie } from "@/types";
@@ -13,6 +13,7 @@ interface UseSeanceReturn {
   loading: boolean;
   saveStatus: SaveStatus;
   saveSerie: (exerciceId: string, nomExercice: string, series: Serie[]) => void;
+  saveNotes: (exerciceId: string, notes: string) => void;
 }
 
 export function useSeance(uid: string, jour: JourSemaine): UseSeanceReturn {
@@ -67,5 +68,22 @@ export function useSeance(uid: string, jour: JourSemaine): UseSeanceReturn {
     [uid, seanceId]
   );
 
-  return { seanceId, loading, saveStatus, saveSerie };
+  const notesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const saveNotes = useCallback(
+    (exerciceId: string, notes: string) => {
+      if (!seanceId) return;
+      if (notesDebounceRef.current) clearTimeout(notesDebounceRef.current);
+      notesDebounceRef.current = setTimeout(async () => {
+        try {
+          await sauvegarderNotesExercice(uid, seanceId, exerciceId, notes);
+        } catch {
+          // silently fail — notes are non-critical
+        }
+      }, 500);
+    },
+    [uid, seanceId]
+  );
+
+  return { seanceId, loading, saveStatus, saveSerie, saveNotes };
 }
