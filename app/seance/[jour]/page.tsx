@@ -144,6 +144,21 @@ export default function SeancePage({ params }: SeancePageProps) {
           </div>
         </header>
 
+        <div className="mb-4">
+          <div className="flex justify-between text-xs text-foreground/40 mb-1">
+            <span>Exercice {index + 1} / {exercices.length}</span>
+          </div>
+          <div className="progress-bar-track">
+            <div
+              className="progress-bar-fill"
+              style={{
+                width: `${((index + 1) / exercices.length) * 100}%`,
+                backgroundColor: couleur.hex,
+              }}
+            />
+          </div>
+        </div>
+
         {exercice ? (
           <ExerciceCard
             key={exercice.id}

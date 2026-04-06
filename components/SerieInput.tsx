@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Serie } from "@/types";
 
 interface SerieInputProps {
@@ -19,8 +20,14 @@ export default function SerieInput({ serie, poidsDefaut, onChange }: SerieInputP
     onChange({ ...serie, reps: val === "" ? null : parseInt(val, 10) });
   }
 
+  const [bouncing, setBouncing] = useState(false);
+
   function toggleComplete() {
     onChange({ ...serie, completee: !serie.completee });
+    if (!serie.completee) {
+      setBouncing(true);
+      setTimeout(() => setBouncing(false), 300);
+    }
   }
 
   return (
@@ -79,7 +86,7 @@ export default function SerieInput({ serie, poidsDefaut, onChange }: SerieInputP
           serie.completee
             ? "bg-green-500 text-white"
             : "border-2 border-accent/20 bg-white text-foreground/30"
-        }`}
+        } ${bouncing ? "animate-serie-complete" : ""}`}
       >
         {serie.completee ? "✓" : "○"}
       </button>

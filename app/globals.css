@@ -35,6 +35,31 @@
   font-family: var(--font-orbitron), var(--font-geist-sans), Arial, sans-serif;
 }
 
+@keyframes retro-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 157, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 107, 157, 0); }
+}
+.animate-retro-pulse { animation: retro-pulse 2s infinite; }
+
+@keyframes serie-complete {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.animate-serie-complete { animation: serie-complete 0.3s ease-out; }
+
+.progress-bar-track {
+  height: 3px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
 html {
   min-height: 100%;
 }
