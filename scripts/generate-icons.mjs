@@ -1,44 +1,26 @@
 import sharp from "sharp";
-import { mkdir } from "fs/promises";
-import { existsSync } from "fs";
+import { mkdirSync } from "fs";
 
-const BG = { r: 26, g: 26, b: 46, alpha: 1 };   // #1a1a2e
+mkdirSync("public/icons", { recursive: true });
 
-async function makeIcon(size) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-    <rect width="${size}" height="${size}" fill="#1a1a2e" rx="${Math.round(size * 0.22)}"/>
-    <text
-      x="50%" y="54%"
-      dominant-baseline="middle"
-      text-anchor="middle"
-      font-family="Arial, sans-serif"
-      font-size="${Math.round(size * 0.52)}"
-      font-weight="bold"
-      fill="#ffffff"
-    >G</text>
-  </svg>`;
+// SVG sans <text> — sharp ne rend pas les polices système.
+// Le "G" est construit en formes géométriques pures.
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#1a1a2e"/>
+  <rect x="100" y="130" width="60" height="252" rx="8" fill="#FF6B9D"/>
+  <rect x="100" y="130" width="220" height="60" rx="8" fill="#FF6B9D"/>
+  <rect x="100" y="322" width="220" height="60" rx="8" fill="#FF6B9D"/>
+  <rect x="260" y="256" width="60" height="126" rx="8" fill="#FF6B9D"/>
+  <rect x="200" y="256" width="120" height="50" rx="6" fill="#FF6B9D"/>
+</svg>`;
 
-  return sharp(Buffer.from(svg))
-    .resize(size, size)
-    .png()
-    .toBuffer();
-}
+const buf = Buffer.from(svg);
 
-async function main() {
-  const dir = "public/icons";
-  if (!existsSync(dir)) await mkdir(dir, { recursive: true });
+await sharp(buf, { density: 144 }).resize(512, 512).png().toFile("public/icons/icon-512.png");
+console.log("✓ icon-512.png (512×512)");
 
-  const icon192 = await makeIcon(192);
-  await sharp(icon192).toFile(`${dir}/icon-192.png`);
-  console.log("✓ icon-192.png");
+await sharp(buf, { density: 144 }).resize(192, 192).png().toFile("public/icons/icon-192.png");
+console.log("✓ icon-192.png (192×192)");
 
-  const icon512 = await makeIcon(512);
-  await sharp(icon512).toFile(`${dir}/icon-512.png`);
-  console.log("✓ icon-512.png");
-
-  const apple = await makeIcon(180);
-  await sharp(apple).toFile(`${dir}/apple-touch-icon.png`);
-  console.log("✓ apple-touch-icon.png (180×180)");
-}
-
-main().catch((e) => { console.error(e); process.exit(1); });
+await sharp(buf, { density: 144 }).resize(180, 180).png().toFile("public/icons/apple-touch-icon.png");
+console.log("✓ apple-touch-icon.png (180×180)");
