@@ -5,7 +5,18 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { getSeancesParJour } from "@/lib/firestore";
 import ProgressionChart from "@/components/ProgressionChart";
+import PixelIcon from "@/components/PixelIcon";
+import { getCouleurJour } from "@/lib/couleurs";
+import type { PixelIconType } from "@/components/PixelIcon";
 import type { JourSemaine } from "@/types";
+
+const ICONS_JOUR: Record<JourSemaine, PixelIconType> = {
+  lundi: "pecs",
+  mardi: "dos",
+  mercredi: "jambes",
+  jeudi: "epaules",
+  vendredi: "cardio",
+};
 
 const JOURS: { slug: JourSemaine; label: string }[] = [
   { slug: "lundi",    label: "Lundi" },
@@ -73,7 +84,7 @@ export default function HistoriquePage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-accent opacity-70">
           Historique
         </p>
-        <h1 className="text-2xl font-bold text-foreground">Mes séances</h1>
+        <h1 className="font-retro text-2xl font-bold text-foreground">Mes séances</h1>
       </header>
 
       {!loading && user && (
@@ -100,7 +111,10 @@ export default function HistoriquePage() {
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-semibold text-foreground">{label}</span>
-                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                    <span
+                      className="rounded-full px-2 py-0.5 text-xs font-medium"
+                      style={{ backgroundColor: `${getCouleurJour(slug).hex}20`, color: getCouleurJour(slug).hex }}
+                    >
                       {seances.length}
                     </span>
                   </div>
@@ -110,9 +124,10 @@ export default function HistoriquePage() {
                 {ouvert && (
                   <div className="border-t border-foreground/5">
                     {seances.length === 0 ? (
-                      <p className="px-4 py-4 text-sm text-foreground/40 text-center">
-                        Aucune séance enregistrée
-                      </p>
+                      <div className="px-4 py-5 flex flex-col items-center gap-2 text-center">
+                        <PixelIcon type={ICONS_JOUR[slug]} size={24} />
+                        <p className="text-sm text-foreground/40">Aucune séance enregistrée</p>
+                      </div>
                     ) : (
                       seances.map((s) => (
                         <Link

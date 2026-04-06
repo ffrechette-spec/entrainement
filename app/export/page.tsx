@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { genererExport, nomFichierExport } from "@/lib/export";
+import PixelIcon from "@/components/PixelIcon";
 import type { ExportData } from "@/lib/export";
 
 export default function ExportPage() {
@@ -46,12 +47,13 @@ export default function ExportPage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-accent opacity-70">
           Export
         </p>
-        <h1 className="text-2xl font-bold text-foreground">Export JSON</h1>
+        <h1 className="font-retro text-2xl font-bold text-foreground">Export JSON</h1>
       </header>
 
       <div className="flex flex-col gap-4">
         {/* Description */}
-        <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <div className="rounded-2xl bg-white p-4 shadow-sm flex items-start gap-3">
+          <PixelIcon type="cardio" size={24} />
           <p className="text-sm text-foreground/70 leading-relaxed">
             Exporte toutes tes séances dans un fichier JSON structuré pour analyse par Claude.
           </p>
